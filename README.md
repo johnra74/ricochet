@@ -150,5 +150,7 @@ After deploying, add a `<link rel="canonical" href="https://yourdomain.com/" />`
 | Key | Action |
 |---|---|
 | `Del` / `Backspace` | Delete selected shape |
+| `Ctrl + C` | Copy selected shape |
+| `Ctrl + V` | Paste copied shape (offset by 20 px) |
 | `Ctrl + Z` | Undo |
 | `Escape` | Deselect / cancel ghost |

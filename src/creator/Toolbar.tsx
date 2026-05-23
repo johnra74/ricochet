@@ -134,6 +134,7 @@ export default function Toolbar({ state, dispatch, onTest }: ToolbarProps) {
             <li>Drag to place shapes</li>
             <li>Click shape to select</li>
             <li>Drag handles to resize/rotate</li>
+            <li>Ctrl+C / Ctrl+V to copy &amp; paste</li>
             <li>Del to remove selected</li>
             <li>Ctrl+Z to undo</li>
           </ul>
