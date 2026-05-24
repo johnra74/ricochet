@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import type { RefObject } from 'react'
 import { clientToSvg } from '../hooks/useSvgCoords.js'
-import { HANDLE_RADIUS } from '../constants.js'
+import { HANDLE_RADIUS, TOUCH_HIT_RADIUS } from '../constants.js'
 import type { Vec2 } from '../types/index.js'
 
 interface DragHandleProps {
@@ -49,25 +49,36 @@ export default function DragHandle({
     window.addEventListener('pointerup', onUp);
   };
 
-  const commonProps = {
-    fill,
-    stroke,
-    strokeWidth: 1.5,
-    style: { cursor },
-    onPointerDown: handlePointerDown,
-  };
+  // Transparent hit circle on top — 44 px minimum touch target
+  const hitCircle = (
+    <circle
+      cx={x} cy={y}
+      r={TOUCH_HIT_RADIUS}
+      fill="transparent"
+      stroke="none"
+      style={{ cursor }}
+      onPointerDown={handlePointerDown}
+    />
+  );
 
   if (shape === 'square') {
     return (
-      <rect
-        x={x - size}
-        y={y - size}
-        width={size * 2}
-        height={size * 2}
-        {...commonProps}
-      />
+      <g>
+        <rect
+          x={x - size} y={y - size}
+          width={size * 2} height={size * 2}
+          fill={fill} stroke={stroke} strokeWidth={1.5}
+          style={{ pointerEvents: 'none' }}
+        />
+        {hitCircle}
+      </g>
     );
   }
 
-  return <circle cx={x} cy={y} r={size} {...commonProps} />;
+  return (
+    <g>
+      <circle cx={x} cy={y} r={size} fill={fill} stroke={stroke} strokeWidth={1.5} style={{ pointerEvents: 'none' }} />
+      {hitCircle}
+    </g>
+  );
 }

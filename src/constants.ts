@@ -22,3 +22,5 @@ export const SHAPE_COLORS: Record<string, string> = {
 
 export const HANDLE_RADIUS = 7;
 export const ROTATE_ARM_LENGTH = 36;
+// Invisible touch target radius — 44 px minimum per Apple HIG / Material Design
+export const TOUCH_HIT_RADIUS = 22;

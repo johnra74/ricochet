@@ -49,8 +49,9 @@ describe('StartPointHandle', () => {
     const { container } = render(
       <svg><StartPointHandle startPoint={{ x: 0, y: 300 }} svgRef={ref} onMove={onMove} /></svg>
     )
-    const group = container.querySelector('g')!
-    fireEvent.pointerDown(group)
+    // The transparent hit circle is the last <circle>
+    const circles = container.querySelectorAll('circle')
+    fireEvent.pointerDown(circles[circles.length - 1])
     fireEvent.pointerMove(window, { clientX: 100, clientY: 200 })
     expect(onMove).toHaveBeenCalled()
   })
@@ -61,8 +62,8 @@ describe('StartPointHandle', () => {
     const { container } = render(
       <svg><StartPointHandle startPoint={{ x: 0, y: 300 }} svgRef={ref} onMove={onMove} /></svg>
     )
-    const group = container.querySelector('g')!
-    fireEvent.pointerDown(group)
+    const circles = container.querySelectorAll('circle')
+    fireEvent.pointerDown(circles[circles.length - 1])
     fireEvent.pointerUp(window)
     onMove.mockClear()
     fireEvent.pointerMove(window, { clientX: 99, clientY: 99 })
@@ -119,8 +120,9 @@ describe('AngleIndicator', () => {
         />
       </svg>
     )
-    const polygon = container.querySelector('polygon')!
-    fireEvent.pointerDown(polygon)
+    // The transparent hit circle is the only <circle> in AngleIndicator
+    const hitCircle = container.querySelector('circle')!
+    fireEvent.pointerDown(hitCircle)
     fireEvent.pointerMove(window, { clientX: 100, clientY: 50 })
     expect(onAngleChange).toHaveBeenCalled()
   })
@@ -138,8 +140,8 @@ describe('AngleIndicator', () => {
         />
       </svg>
     )
-    const polygon = container.querySelector('polygon')!
-    fireEvent.pointerDown(polygon)
+    const hitCircle = container.querySelector('circle')!
+    fireEvent.pointerDown(hitCircle)
     fireEvent.pointerUp(window)
     onAngleChange.mockClear()
     fireEvent.pointerMove(window, { clientX: 200, clientY: 100 })
@@ -169,8 +171,9 @@ describe('TargetMarker', () => {
         <TargetMarker target={{ x: 400, y: 300, radius: 20 }} svgRef={ref} onMove={onMove} />
       </svg>
     )
-    const group = container.querySelector('g')!
-    fireEvent.pointerDown(group)
+    // The transparent hit circle is the last <circle> (after the 3 bullseye rings)
+    const circles = container.querySelectorAll('circle')
+    fireEvent.pointerDown(circles[circles.length - 1])
     fireEvent.pointerMove(window, { clientX: 300, clientY: 200 })
     expect(onMove).toHaveBeenCalled()
   })
@@ -183,8 +186,8 @@ describe('TargetMarker', () => {
         <TargetMarker target={{ x: 400, y: 300, radius: 20 }} svgRef={ref} onMove={onMove} />
       </svg>
     )
-    const group = container.querySelector('g')!
-    fireEvent.pointerDown(group)
+    const circles = container.querySelectorAll('circle')
+    fireEvent.pointerDown(circles[circles.length - 1])
     fireEvent.pointerUp(window)
     onMove.mockClear()
     fireEvent.pointerMove(window, { clientX: 99, clientY: 99 })
