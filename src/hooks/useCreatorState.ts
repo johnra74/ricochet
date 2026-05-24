@@ -23,6 +23,7 @@ export interface CreatorState {
   ghost: GhostState | null;
   history: Shape[][];
   validated: boolean;
+  clipboard: Shape | null;
 }
 
 export type CreatorAction =
@@ -42,6 +43,8 @@ export type CreatorAction =
   | { type: 'TOGGLE_WALL'; wall: WallName }
   | { type: 'MARK_VALIDATED' }
   | { type: 'LOAD'; payload: Payload }
+  | { type: 'COPY_SHAPE'; id: string }
+  | { type: 'PASTE_SHAPE' }
 
 const initialState: CreatorState = {
   board: { ...DEFAULT_BOARD },
@@ -54,6 +57,7 @@ const initialState: CreatorState = {
   ghost: null,
   history: [],
   validated: false,
+  clipboard: null,
 };
 
 function reducer(state: CreatorState, action: CreatorAction): CreatorState {
@@ -157,6 +161,25 @@ function reducer(state: CreatorState, action: CreatorAction): CreatorState {
 
     case 'MARK_VALIDATED':
       return { ...state, validated: true };
+
+    case 'COPY_SHAPE': {
+      const shape = state.shapes.find((s) => s.id === action.id) ?? null;
+      return { ...state, clipboard: shape };
+    }
+
+    case 'PASTE_SHAPE': {
+      if (!state.clipboard) return state;
+      const OFFSET = 20;
+      const pasted: Shape = { ...state.clipboard, id: uuidv4(), cx: state.clipboard.cx + OFFSET, cy: state.clipboard.cy + OFFSET };
+      const newShapes = [...state.shapes, pasted];
+      return {
+        ...state,
+        shapes: newShapes,
+        selectedId: pasted.id,
+        history: [...state.history, state.shapes],
+        validated: false,
+      };
+    }
 
     case 'LOAD':
       return {

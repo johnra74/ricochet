@@ -58,6 +58,8 @@ export default function AboutModal({ onClose }: AboutModalProps) {
           <h2>Keyboard shortcuts</h2>
           <div className="about-keys">
             <span className="key">Del</span><span>Remove selected shape</span>
+            <span className="key">Ctrl C</span><span>Copy selected shape</span>
+            <span className="key">Ctrl V</span><span>Paste copied shape</span>
             <span className="key">Ctrl Z</span><span>Undo last action</span>
             <span className="key">Esc</span><span>Deselect / cancel</span>
           </div>
