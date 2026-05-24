@@ -2,6 +2,7 @@ import { useRef } from 'react'
 import type { RefObject } from 'react'
 import { fromAngle, add, scale, angleTo } from '../physics/vector.js'
 import { clientToSvg } from '../hooks/useSvgCoords.js'
+import { TOUCH_HIT_RADIUS } from '../constants.js'
 import type { Vec2 } from '../types/index.js'
 
 const AIM_LENGTH = 60;
@@ -56,12 +57,20 @@ export default function AngleIndicator({ startPoint, angleRad, svgRef, onAngleCh
         stroke="#ff6b1a" strokeWidth="2" strokeDasharray="6,4"
         style={{ pointerEvents: 'none' }}
       />
-      {/* Arrowhead (draggable) */}
+      {/* Arrowhead (visual, non-interactive) */}
       <polygon
         points={`${tip.x},${tip.y} ${arrowL.x},${arrowL.y} ${arrowR.x},${arrowR.y}`}
         fill="#ff6b1a"
         stroke="#fff"
         strokeWidth="1"
+        style={{ pointerEvents: 'none' }}
+      />
+      {/* Transparent hit target — 44 px touch area centered on tip */}
+      <circle
+        cx={tip.x} cy={tip.y}
+        r={TOUCH_HIT_RADIUS}
+        fill="transparent"
+        stroke="none"
         style={{ cursor: 'grab' }}
         onPointerDown={handlePointerDown}
       />

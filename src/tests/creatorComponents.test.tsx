@@ -127,8 +127,10 @@ describe('DragHandle', () => {
         <DragHandle x={50} y={50} svgRef={ref} onDrag={onDrag} onDragEnd={onDragEnd} />
       </svg>
     )
-    const circle = container.querySelector('circle')!
-    fireEvent.pointerDown(circle)
+    // The transparent hit circle is the last <circle> rendered
+    const circles = container.querySelectorAll('circle')
+    const hitCircle = circles[circles.length - 1]
+    fireEvent.pointerDown(hitCircle)
     fireEvent.pointerUp(window)
     expect(onDragEnd).toHaveBeenCalledOnce()
   })
@@ -139,10 +141,10 @@ describe('DragHandle', () => {
     const { container } = render(
       <svg><DragHandle x={50} y={50} svgRef={ref} onDrag={onDrag} /></svg>
     )
-    const circle = container.querySelector('circle')!
-    fireEvent.pointerDown(circle)
+    const circles = container.querySelectorAll('circle')
+    const hitCircle = circles[circles.length - 1]
+    fireEvent.pointerDown(hitCircle)
     fireEvent.pointerUp(window)
-    // After pointerUp, additional moves should not call onDrag
     onDrag.mockClear()
     fireEvent.pointerMove(window, { clientX: 100, clientY: 100 })
     expect(onDrag).not.toHaveBeenCalled()
