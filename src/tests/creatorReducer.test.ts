@@ -273,6 +273,83 @@ describe('LOAD', () => {
   })
 })
 
+describe('COPY_SHAPE / PASTE_SHAPE', () => {
+  it('COPY_SHAPE stores the shape in clipboard', () => {
+    const { result } = renderHook(() => useCreatorState())
+    act(() => result.current.dispatch({ type: 'GHOST_START', shapeType: 'rect', pt: { x: 0, y: 0 } }))
+    act(() => result.current.dispatch({ type: 'GHOST_MOVE', pt: { x: 100, y: 100 } }))
+    act(() => result.current.dispatch({ type: 'GHOST_COMMIT' }))
+    const id = result.current.state.shapes[0].id
+    act(() => result.current.dispatch({ type: 'COPY_SHAPE', id }))
+    expect(result.current.state.clipboard).not.toBeNull()
+    expect(result.current.state.clipboard!.id).toBe(id)
+  })
+
+  it('COPY_SHAPE with unknown id stores null', () => {
+    const { result } = renderHook(() => useCreatorState())
+    act(() => result.current.dispatch({ type: 'COPY_SHAPE', id: 'nonexistent' }))
+    expect(result.current.state.clipboard).toBeNull()
+  })
+
+  it('PASTE_SHAPE adds a new shape with offset position', () => {
+    const { result } = renderHook(() => useCreatorState())
+    act(() => result.current.dispatch({ type: 'GHOST_START', shapeType: 'rect', pt: { x: 0, y: 0 } }))
+    act(() => result.current.dispatch({ type: 'GHOST_MOVE', pt: { x: 100, y: 100 } }))
+    act(() => result.current.dispatch({ type: 'GHOST_COMMIT' }))
+    const original = result.current.state.shapes[0]
+    act(() => result.current.dispatch({ type: 'COPY_SHAPE', id: original.id }))
+    act(() => result.current.dispatch({ type: 'PASTE_SHAPE' }))
+    expect(result.current.state.shapes).toHaveLength(2)
+    const pasted = result.current.state.shapes[1]
+    expect(pasted.cx).toBe(original.cx + 20)
+    expect(pasted.cy).toBe(original.cy + 20)
+  })
+
+  it('PASTE_SHAPE gives the pasted shape a new unique id', () => {
+    const { result } = renderHook(() => useCreatorState())
+    act(() => result.current.dispatch({ type: 'GHOST_START', shapeType: 'circle', pt: { x: 200, y: 200 } }))
+    act(() => result.current.dispatch({ type: 'GHOST_MOVE', pt: { x: 260, y: 260 } }))
+    act(() => result.current.dispatch({ type: 'GHOST_COMMIT' }))
+    const original = result.current.state.shapes[0]
+    act(() => result.current.dispatch({ type: 'COPY_SHAPE', id: original.id }))
+    act(() => result.current.dispatch({ type: 'PASTE_SHAPE' }))
+    const pasted = result.current.state.shapes[1]
+    expect(pasted.id).not.toBe(original.id)
+  })
+
+  it('PASTE_SHAPE selects the pasted shape', () => {
+    const { result } = renderHook(() => useCreatorState())
+    act(() => result.current.dispatch({ type: 'GHOST_START', shapeType: 'rect', pt: { x: 0, y: 0 } }))
+    act(() => result.current.dispatch({ type: 'GHOST_MOVE', pt: { x: 80, y: 80 } }))
+    act(() => result.current.dispatch({ type: 'GHOST_COMMIT' }))
+    const original = result.current.state.shapes[0]
+    act(() => result.current.dispatch({ type: 'COPY_SHAPE', id: original.id }))
+    act(() => result.current.dispatch({ type: 'PASTE_SHAPE' }))
+    const pasted = result.current.state.shapes[1]
+    expect(result.current.state.selectedId).toBe(pasted.id)
+  })
+
+  it('PASTE_SHAPE with no clipboard is a no-op', () => {
+    const { result } = renderHook(() => useCreatorState())
+    act(() => result.current.dispatch({ type: 'PASTE_SHAPE' }))
+    expect(result.current.state.shapes).toHaveLength(0)
+  })
+
+  it('pasting multiple times stacks offsets correctly', () => {
+    const { result } = renderHook(() => useCreatorState())
+    act(() => result.current.dispatch({ type: 'GHOST_START', shapeType: 'rect', pt: { x: 0, y: 0 } }))
+    act(() => result.current.dispatch({ type: 'GHOST_MOVE', pt: { x: 100, y: 100 } }))
+    act(() => result.current.dispatch({ type: 'GHOST_COMMIT' }))
+    const original = result.current.state.shapes[0]
+    act(() => result.current.dispatch({ type: 'COPY_SHAPE', id: original.id }))
+    act(() => result.current.dispatch({ type: 'PASTE_SHAPE' }))
+    act(() => result.current.dispatch({ type: 'PASTE_SHAPE' }))
+    expect(result.current.state.shapes).toHaveLength(3)
+    // Second paste is from same clipboard (original+20), not cascading
+    expect(result.current.state.shapes[2].cx).toBe(original.cx + 20)
+  })
+})
+
 describe('getPayload', () => {
   it('returns a valid Payload reflecting current state', () => {
     const { result } = renderHook(() => useCreatorState(BASE_PAYLOAD))
