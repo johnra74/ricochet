@@ -87,7 +87,7 @@ describe('ResultOverlay', () => {
   });
 
   describe('test mode + win', () => {
-    it('shows share block with URL input and Copy button', () => {
+    it('shows share block with URL input and Copy URL button', () => {
       render(
         <ResultOverlay
           result={winResult}
@@ -99,10 +99,10 @@ describe('ResultOverlay', () => {
         />
       );
       expect(screen.getByDisplayValue('https://example.com/game?g=abc123')).toBeInTheDocument();
-      expect(screen.getByText('Copy')).toBeInTheDocument();
+      expect(screen.getByText('Copy URL')).toBeInTheDocument();
     });
 
-    it('Copy button calls onShare', async () => {
+    it('Copy URL button calls onShare', async () => {
       const onShare = vi.fn();
       render(
         <ResultOverlay
@@ -114,7 +114,7 @@ describe('ResultOverlay', () => {
           onShare={onShare}
         />
       );
-      await userEvent.click(screen.getByText('Copy'));
+      await userEvent.click(screen.getByText('Copy URL'));
       expect(onShare).toHaveBeenCalledOnce();
     });
 
@@ -131,6 +131,79 @@ describe('ResultOverlay', () => {
         />
       );
       expect(screen.getByText('Copied!')).toBeInTheDocument();
+    });
+
+    it('renders a QR code SVG when shareUrl is provided', () => {
+      const { container } = render(
+        <ResultOverlay
+          result={winResult}
+          maxRicochets={5}
+          isTestMode={true}
+          onReset={vi.fn()}
+          shareUrl="https://example.com/game?g=abc123"
+          onShare={vi.fn()}
+        />
+      );
+      expect(container.querySelector('.qr-container')).not.toBeNull();
+      expect(container.querySelector('.qr-container svg')).not.toBeNull();
+    });
+
+    it('QR code SVG has size 256', () => {
+      const { container } = render(
+        <ResultOverlay
+          result={winResult}
+          maxRicochets={5}
+          isTestMode={true}
+          onReset={vi.fn()}
+          shareUrl="https://example.com/game?g=abc123"
+          onShare={vi.fn()}
+        />
+      );
+      const svg = container.querySelector('.qr-container svg');
+      expect(svg?.getAttribute('width')).toBe('256');
+      expect(svg?.getAttribute('height')).toBe('256');
+    });
+
+    it('URL input and QR code are siblings inside .share-section', () => {
+      const { container } = render(
+        <ResultOverlay
+          result={winResult}
+          maxRicochets={5}
+          isTestMode={true}
+          onReset={vi.fn()}
+          shareUrl="https://example.com/game?g=abc123"
+          onShare={vi.fn()}
+        />
+      );
+      const section = container.querySelector('.share-section');
+      expect(section?.querySelector('.share-block')).not.toBeNull();
+      expect(section?.querySelector('.qr-container')).not.toBeNull();
+    });
+
+    it('does not render QR code on lose in test mode', () => {
+      const { container } = render(
+        <ResultOverlay
+          result={loseResult}
+          maxRicochets={5}
+          isTestMode={true}
+          onReset={vi.fn()}
+          shareUrl="https://example.com/game?g=abc123"
+          onShare={vi.fn()}
+        />
+      );
+      expect(container.querySelector('.qr-container')).toBeNull();
+    });
+
+    it('does not render QR code without shareUrl', () => {
+      const { container } = render(
+        <ResultOverlay
+          result={winResult}
+          maxRicochets={5}
+          isTestMode={true}
+          onReset={vi.fn()}
+        />
+      );
+      expect(container.querySelector('.qr-container')).toBeNull();
     });
 
     it('does not show make-your-own section in test mode', () => {
@@ -200,6 +273,19 @@ describe('ResultOverlay', () => {
         />
       );
       expect(screen.queryByDisplayValue('https://example.com')).not.toBeInTheDocument();
+    });
+
+    it('does not render QR code in non-test mode', () => {
+      const { container } = render(
+        <ResultOverlay
+          result={winResult}
+          maxRicochets={5}
+          isTestMode={false}
+          onReset={vi.fn()}
+          shareUrl="https://example.com"
+        />
+      );
+      expect(container.querySelector('.qr-container')).toBeNull();
     });
   });
 });

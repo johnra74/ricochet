@@ -1,3 +1,4 @@
+import { QRCodeSVG } from 'qrcode.react'
 import type { SimResult } from '../types/index.js'
 
 // I — Interface Segregation: only the props this component actually renders
@@ -34,11 +35,16 @@ export default function ResultOverlay({
           {result.ricochetCount} / {maxRicochets} ricochets used
         </div>
         {isTestMode && won && shareUrl && (
-          <div className="share-block">
-            <input className="share-url" readOnly value={shareUrl} onFocus={(e) => e.target.select()} />
-            <button className="btn btn-share-game" onClick={onShare}>
-              {copied ? 'Copied!' : 'Copy'}
-            </button>
+          <div className="share-section">
+            <div className="share-block">
+              <input className="share-url" readOnly value={shareUrl} onFocus={(e) => e.target.select()} />
+              <button className="btn btn-share-game" onClick={onShare}>
+                {copied ? 'Copied!' : 'Copy URL'}
+              </button>
+            </div>
+            <div className="qr-container">
+              <QRCodeSVG value={shareUrl} size={256} bgColor="#ffffff" fgColor="#0d0f14" level="M" />
+            </div>
           </div>
         )}
         <div className="result-actions">

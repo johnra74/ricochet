@@ -39,20 +39,19 @@ export function validatePayload(obj: unknown): asserts obj is Payload {
   assert(Array.isArray(shapes), 'shapes must be an array');
 
   for (const s of shapes as Record<string, unknown>[]) {
-    assert(typeof s['id'] === 'string', 'Shape id must be a string');
     assert(SHAPE_TYPES.includes(s['type'] as typeof SHAPE_TYPES[number]), `Unknown shape type: ${String(s['type'])}`);
-    assert(isNum(s['cx']) && isNum(s['cy']), `Shape ${String(s['id'])} missing cx/cy`);
+    assert(isNum(s['cx']) && isNum(s['cy']), `Shape missing cx/cy`);
 
     if (s['type'] === 'rect') {
-      assert(isNum(s['width']) && (s['width'] as number) > 0, `Rect ${String(s['id'])} invalid width`);
-      assert(isNum(s['height']) && (s['height'] as number) > 0, `Rect ${String(s['id'])} invalid height`);
-      assert(isNum(s['rotation']), `Rect ${String(s['id'])} invalid rotation`);
+      assert(isNum(s['width']) && (s['width'] as number) > 0, 'Rect invalid width');
+      assert(isNum(s['height']) && (s['height'] as number) > 0, 'Rect invalid height');
+      assert(isNum(s['rotation']), 'Rect invalid rotation');
     } else if (s['type'] === 'triangle') {
-      assert(isNum(s['base']) && (s['base'] as number) > 0, `Triangle ${String(s['id'])} invalid base`);
-      assert(isNum(s['height']) && (s['height'] as number) > 0, `Triangle ${String(s['id'])} invalid height`);
-      assert(isNum(s['rotation']), `Triangle ${String(s['id'])} invalid rotation`);
+      assert(isNum(s['base']) && (s['base'] as number) > 0, 'Triangle invalid base');
+      assert(isNum(s['height']) && (s['height'] as number) > 0, 'Triangle invalid height');
+      assert(isNum(s['rotation']), 'Triangle invalid rotation');
     } else if (s['type'] === 'circle') {
-      assert(isNum(s['radius']) && (s['radius'] as number) > 0, `Circle ${String(s['id'])} invalid radius`);
+      assert(isNum(s['radius']) && (s['radius'] as number) > 0, 'Circle invalid radius');
     }
   }
 }

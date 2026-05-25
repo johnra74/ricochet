@@ -96,14 +96,6 @@ describe('validatePayload', () => {
     expect(() => validatePayload(p)).not.toThrow();
   });
 
-  it('throws when a rect shape has a missing id', () => {
-    const p = {
-      ...validPayload(),
-      shapes: [{ type: 'rect', cx: 100, cy: 100, width: 50, height: 30, rotation: 0 }],
-    };
-    expect(() => validatePayload(p)).toThrow();
-  });
-
   it('throws when shape type is invalid', () => {
     const p = {
       ...validPayload(),

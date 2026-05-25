@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { encode, decode } from '../encoding/codec.js'
 import { validatePayload } from '../encoding/schema.js'
-import type { Payload } from '../types/index.js'
+import type { Payload, Shape } from '../types/index.js'
 
 const VALID_PAYLOAD: Payload = {
   version: 1,
@@ -16,16 +16,26 @@ const VALID_PAYLOAD: Payload = {
   allowedWalls: ['left', 'top'],
 }
 
+// IDs are stripped on encode and regenerated on decode, so compare structural data only
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const withoutIds = (p: Payload) => ({ ...p, shapes: p.shapes.map(({ id: _, ...rest }: Shape) => rest) })
+
 describe('encode/decode round-trip', () => {
-  it('round-trips a full payload exactly', () => {
+  it('round-trips a full payload exactly (ignoring regenerated IDs)', () => {
     const encoded = encode(VALID_PAYLOAD)
     const decoded = decode(encoded)
-    expect(decoded).toEqual(VALID_PAYLOAD)
+    expect(withoutIds(decoded)).toEqual(withoutIds(VALID_PAYLOAD))
+  })
+
+  it('decoded shapes have fresh UUIDs', () => {
+    const decoded = decode(encode(VALID_PAYLOAD))
+    expect(decoded.shapes).toHaveLength(VALID_PAYLOAD.shapes.length)
+    decoded.shapes.forEach((s) => expect(typeof s.id).toBe('string'))
   })
 
   it('round-trips an empty shapes array', () => {
     const payload: Payload = { ...VALID_PAYLOAD, shapes: [] }
-    expect(decode(encode(payload))).toEqual(payload)
+    expect(withoutIds(decode(encode(payload)))).toEqual(withoutIds(payload))
   })
 
   it('encoded string is a non-empty string', () => {
@@ -42,7 +52,7 @@ describe('encode/decode round-trip', () => {
 
   it('round-trip with all wall types', () => {
     const payload: Payload = { ...VALID_PAYLOAD, allowedWalls: ['top', 'bottom', 'left', 'right'] }
-    expect(decode(encode(payload))).toEqual(payload)
+    expect(withoutIds(decode(encode(payload)))).toEqual(withoutIds(payload))
   })
 })
 
@@ -135,11 +145,6 @@ describe('validatePayload', () => {
   it('accepts payload without allowedWalls (optional field)', () => {
     const { allowedWalls: _, ...noWalls } = VALID_PAYLOAD
     expect(() => validatePayload(noWalls)).not.toThrow()
-  })
-
-  it('throws when shape missing id', () => {
-    const badShape = { type: 'circle', cx: 0, cy: 0, radius: 10 }
-    expect(() => validatePayload({ ...VALID_PAYLOAD, shapes: [badShape] })).toThrow()
   })
 
   it('throws when shape missing cx', () => {
