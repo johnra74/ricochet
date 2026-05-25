@@ -190,7 +190,30 @@ describe('ResultOverlay', () => {
       />
     )
     expect(screen.getByRole('textbox')).toHaveValue('https://example.com/?g=abc')
-    expect(screen.getByText('Copy')).toBeInTheDocument()
+    expect(screen.getByText('Copy URL')).toBeInTheDocument()
+  })
+
+  it('renders QR code SVG with size 256 in test mode on win', () => {
+    const { container } = render(
+      <ResultOverlay
+        result={WIN_RESULT} maxRicochets={5} isTestMode
+        onReset={vi.fn()} shareUrl="https://example.com/?g=abc" onShare={vi.fn()}
+      />
+    )
+    const svg = container.querySelector('.qr-container svg')
+    expect(svg).not.toBeNull()
+    expect(svg?.getAttribute('width')).toBe('256')
+    expect(svg?.getAttribute('height')).toBe('256')
+  })
+
+  it('does not render QR code on lose', () => {
+    const { container } = render(
+      <ResultOverlay
+        result={LOSE_RESULT} maxRicochets={5} isTestMode
+        onReset={vi.fn()} shareUrl="https://example.com/?g=abc" onShare={vi.fn()}
+      />
+    )
+    expect(container.querySelector('.qr-container')).toBeNull()
   })
 
   it('shows "Copied!" after copy in test mode', () => {
@@ -235,7 +258,7 @@ describe('ResultOverlay', () => {
     expect(container.querySelector('.make-your-own')).toBeNull()
   })
 
-  it('calls onShare when Copy is clicked', () => {
+  it('calls onShare when Copy URL is clicked', () => {
     const onShare = vi.fn()
     render(
       <ResultOverlay
@@ -243,7 +266,7 @@ describe('ResultOverlay', () => {
         onReset={vi.fn()} shareUrl="https://example.com/?g=abc" onShare={onShare}
       />
     )
-    fireEvent.click(screen.getByText('Copy'))
+    fireEvent.click(screen.getByText('Copy URL'))
     expect(onShare).toHaveBeenCalledOnce()
   })
 

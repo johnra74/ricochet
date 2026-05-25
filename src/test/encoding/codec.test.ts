@@ -1,7 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import LZString from 'lz-string';
 import { encode, decode } from '../../encoding/codec.js';
-import type { Payload } from '../../types/index.js';
+import type { Payload, Shape } from '../../types/index.js';
+
+// IDs are stripped on encode and regenerated on decode — compare structural data only
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const stripIds = (shapes: Shape[]) => shapes.map(({ id: _, ...rest }) => rest);
 
 function samplePayload(): Payload {
   return {
@@ -39,7 +43,7 @@ describe('decode', () => {
     expect(decoded.board).toEqual(original.board);
     expect(decoded.target).toEqual(original.target);
     expect(decoded.maxRicochets).toBe(original.maxRicochets);
-    expect(decoded.shapes).toEqual(original.shapes);
+    expect(stripIds(decoded.shapes)).toEqual(stripIds(original.shapes));
     expect(decoded.allowedWalls).toEqual(original.allowedWalls);
   });
 
@@ -55,7 +59,7 @@ describe('decode', () => {
       allowedWalls: ['left', 'right'],
     };
     const decoded = decode(encode(payload));
-    expect(decoded.shapes[0]).toEqual(payload.shapes[0]);
+    expect(stripIds(decoded.shapes)).toEqual(stripIds(payload.shapes));
     expect(decoded.allowedWalls).toEqual(['left', 'right']);
   });
 

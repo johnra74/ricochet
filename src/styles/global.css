@@ -365,12 +365,25 @@ html, body, #root {
 .result-overlay.win .result-title { color: var(--success); }
 .result-overlay.lose .result-title { color: var(--danger); }
 .result-detail { color: var(--text-muted); font-size: 14px; }
+.share-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 360px;
+}
 .share-block {
   display: flex;
   align-items: center;
   gap: 8px;
   width: 100%;
-  max-width: 360px;
+}
+.qr-container {
+  padding: 10px;
+  background: #fff;
+  border-radius: 8px;
+  line-height: 0;
 }
 .share-url {
   flex: 1;
@@ -675,7 +688,8 @@ html, body, #root {
   .result-card { padding: 28px 20px; width: min(92vw, 380px); }
   .result-title { font-size: 26px; }
   .result-actions { flex-wrap: wrap; justify-content: center; }
-  .share-block { max-width: 100%; flex-direction: column; }
+  .share-section { max-width: 100%; }
+  .share-block { flex-direction: column; }
 
   /* Banner */
   .test-mode-banner { font-size: 11px; padding: 5px 12px; }
