@@ -5,8 +5,9 @@ import Target from '../shared/Target.js'
 import StartPointHandle from './StartPointHandle.js'
 import AngleIndicator from './AngleIndicator.js'
 import BallPath from './BallPath.js'
+import PreviewPath from './PreviewPath.js'
 import { clientToSvg } from '../hooks/useSvgCoords.js'
-import type { Payload, Vec2 } from '../types/index.js'
+import type { Payload, Vec2, SimResult } from '../types/index.js'
 import type { PlayerState } from '../hooks/usePlayerState.js'
 
 interface PlayerBoardProps {
@@ -15,9 +16,10 @@ interface PlayerBoardProps {
   setStart: (pt: Vec2) => void;
   setAngle: (rad: number) => void;
   aimAt: (pt: Vec2) => void;
+  previewResult?: SimResult | null;
 }
 
-export default function PlayerBoard({ payload, playerState, setStart, setAngle, aimAt }: PlayerBoardProps) {
+export default function PlayerBoard({ payload, playerState, setStart, setAngle, aimAt, previewResult }: PlayerBoardProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const { board, target, shapes, allowedWalls } = payload;
   const { startPoint, angleRad, phase, result, animFrac, ballPos } = playerState;
@@ -48,6 +50,25 @@ export default function PlayerBoard({ payload, playerState, setStart, setAngle, 
             ballPos={ballPos}
             outcome={result.outcome}
           />
+        )}
+
+        {previewResult && phase === 'aiming' && (
+          <PreviewPath path={previewResult.path} outcome={previewResult.outcome} />
+        )}
+
+        {previewResult && phase === 'aiming' && (
+          <text
+            x={board.width - 10}
+            y={22}
+            textAnchor="end"
+            fontSize="13"
+            fontFamily="monospace"
+            fill={previewResult.outcome === 'win' ? '#ffd580' : '#e6e8ed'}
+            opacity={0.85}
+            style={{ pointerEvents: 'none' }}
+          >
+            {previewResult.ricochetCount} / {payload.maxRicochets}
+          </text>
         )}
 
         {startPoint && phase === 'aiming' && (
