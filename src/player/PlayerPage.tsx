@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { usePlayerState } from '../hooks/usePlayerState.js'
 import { useAnimationLoop } from '../hooks/useAnimationLoop.js'
 import { simulate } from '../physics/simulate.js'
@@ -42,6 +42,11 @@ export default function PlayerPage({ payload, isTestMode = false, onBackToEditor
       onWin();
     }
   }, [phase, result, isTestMode, onWin]);
+
+  const previewResult = useMemo(() => {
+    if (!isTestMode || phase !== 'aiming' || !startPoint) return null;
+    return simulate(startPoint, angleRad, payload);
+  }, [isTestMode, phase, startPoint, angleRad, payload]);
 
   const shareUrl = isTestMode
     ? `${window.location.origin}${window.location.pathname}?g=${encode(payload)}`
@@ -107,6 +112,7 @@ export default function PlayerPage({ payload, isTestMode = false, onBackToEditor
           setStart={setStart}
           setAngle={setAngle}
           aimAt={aimAt}
+          previewResult={previewResult}
         />
 
         <div className="player-controls">
