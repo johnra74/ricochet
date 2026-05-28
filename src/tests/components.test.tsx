@@ -248,6 +248,17 @@ describe('ResultOverlay', () => {
     expect(screen.getByText('Start fresh')).toBeInTheDocument()
   })
 
+  it('hides Remix this level on lose (not Start fresh)', () => {
+    render(
+      <ResultOverlay
+        result={LOSE_RESULT} maxRicochets={5} isTestMode={false}
+        onReset={vi.fn()} remixUrl="/?g=abc&edit=1"
+      />
+    )
+    expect(screen.queryByText('Remix this level')).toBeNull()
+    expect(screen.getByText('Start fresh')).toBeInTheDocument()
+  })
+
   it('does not show remix links in test mode', () => {
     const { container } = render(
       <ResultOverlay

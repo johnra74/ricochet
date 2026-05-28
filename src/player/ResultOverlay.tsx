@@ -57,7 +57,7 @@ export default function ResultOverlay({
           <div className="make-your-own">
             <p className="make-your-own-label">Want to create your own puzzle?</p>
             <div className="make-your-own-actions">
-              <a href={remixUrl ?? '/'} className="btn btn-remix">Remix this level</a>
+              {won && <a href={remixUrl ?? '/'} className="btn btn-remix">Remix this level</a>}
               <a href="/" className="btn btn-back">Start fresh</a>
             </div>
           </div>
