@@ -2,6 +2,7 @@ import { useReducer, useCallback } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import { DEFAULT_BOARD, DEFAULT_TARGET, DEFAULT_MAX_RICOCHETS, DEFAULT_ALLOWED_WALLS } from '../constants.js'
 import { useCreatorKeyboard } from './useCreatorKeyboard.js'
+import { shapeBBox } from '../utils/bbox.js'
 import type { Shape, Board, Target, WallName, Payload, Vec2 } from '../types/index.js'
 
 export type ToolName = 'select' | 'rect' | 'triangle' | 'circle' | 'target'
@@ -18,7 +19,7 @@ export interface CreatorState {
   maxRicochets: number;
   allowedWalls: WallName[];
   shapes: Shape[];
-  selectedId: string | null;
+  selectedIds: string[];
   activeTool: ToolName;
   ghost: GhostState | null;
   history: Shape[][];
@@ -29,6 +30,7 @@ export interface CreatorState {
 export type CreatorAction =
   | { type: 'SET_TOOL'; tool: ToolName }
   | { type: 'SELECT'; id: string }
+  | { type: 'TOGGLE_SELECTION'; id: string }
   | { type: 'DESELECT' }
   | { type: 'GHOST_START'; shapeType: 'rect' | 'triangle' | 'circle'; pt: Vec2 }
   | { type: 'GHOST_MOVE'; pt: Vec2 }
@@ -36,6 +38,8 @@ export type CreatorAction =
   | { type: 'GHOST_CANCEL' }
   | { type: 'UPDATE_SHAPE'; id: string; updates: Partial<Shape> }
   | { type: 'DELETE_SHAPE'; id: string }
+  | { type: 'DELETE_SELECTED' }
+  | { type: 'ALIGN'; direction: 'left' | 'right' | 'top' | 'bottom' }
   | { type: 'SET_TARGET'; updates: Partial<Target> }
   | { type: 'SET_BOARD'; updates: Partial<Board> }
   | { type: 'SET_MAX_RICOCHETS'; value: number }
@@ -52,7 +56,7 @@ const initialState: CreatorState = {
   maxRicochets: DEFAULT_MAX_RICOCHETS,
   allowedWalls: [...DEFAULT_ALLOWED_WALLS],
   shapes: [],
-  selectedId: null,
+  selectedIds: [],
   activeTool: 'select',
   ghost: null,
   history: [],
@@ -63,13 +67,24 @@ const initialState: CreatorState = {
 function reducer(state: CreatorState, action: CreatorAction): CreatorState {
   switch (action.type) {
     case 'SET_TOOL':
-      return { ...state, activeTool: action.tool, selectedId: null, ghost: null };
+      return { ...state, activeTool: action.tool, selectedIds: [], ghost: null };
 
     case 'SELECT':
-      return { ...state, selectedId: action.id, activeTool: 'select' };
+      return { ...state, selectedIds: [action.id], activeTool: 'select' };
+
+    case 'TOGGLE_SELECTION': {
+      const already = state.selectedIds.includes(action.id);
+      return {
+        ...state,
+        selectedIds: already
+          ? state.selectedIds.filter((i) => i !== action.id)
+          : [...state.selectedIds, action.id],
+        activeTool: 'select',
+      };
+    }
 
     case 'DESELECT':
-      return { ...state, selectedId: null };
+      return { ...state, selectedIds: [] };
 
     case 'GHOST_START':
       return { ...state, ghost: { shapeType: action.shapeType, startSvg: action.pt, currentSvg: action.pt } };
@@ -106,7 +121,7 @@ function reducer(state: CreatorState, action: CreatorAction): CreatorState {
         ...state,
         shapes: newShapes,
         ghost: null,
-        selectedId: newShape.id,
+        selectedIds: [newShape.id],
         activeTool: 'select',
         history: [...state.history, state.shapes],
         validated: false,
@@ -127,10 +142,43 @@ function reducer(state: CreatorState, action: CreatorAction): CreatorState {
       return {
         ...state,
         shapes: state.shapes.filter((s) => s.id !== action.id),
-        selectedId: state.selectedId === action.id ? null : state.selectedId,
+        selectedIds: state.selectedIds.filter((i) => i !== action.id),
         history: [...state.history, state.shapes],
         validated: false,
       };
+
+    case 'DELETE_SELECTED': {
+      if (state.selectedIds.length === 0) return state;
+      return {
+        ...state,
+        shapes: state.shapes.filter((s) => !state.selectedIds.includes(s.id)),
+        selectedIds: [],
+        history: [...state.history, state.shapes],
+        validated: false,
+      };
+    }
+
+    case 'ALIGN': {
+      const { direction } = action;
+      const selected = state.shapes.filter((s) => state.selectedIds.includes(s.id));
+      if (selected.length < 2) return state;
+      const infos = selected.map((s) => ({ id: s.id, bbox: shapeBBox(s), cx: s.cx, cy: s.cy }));
+      let shapes = state.shapes;
+      if (direction === 'left') {
+        const target = Math.min(...infos.map((b) => b.bbox.left));
+        shapes = shapes.map((s) => { const b = infos.find((i) => i.id === s.id); return b ? { ...s, cx: b.cx + (target - b.bbox.left) } as Shape : s; });
+      } else if (direction === 'right') {
+        const target = Math.max(...infos.map((b) => b.bbox.right));
+        shapes = shapes.map((s) => { const b = infos.find((i) => i.id === s.id); return b ? { ...s, cx: b.cx + (target - b.bbox.right) } as Shape : s; });
+      } else if (direction === 'top') {
+        const target = Math.min(...infos.map((b) => b.bbox.top));
+        shapes = shapes.map((s) => { const b = infos.find((i) => i.id === s.id); return b ? { ...s, cy: b.cy + (target - b.bbox.top) } as Shape : s; });
+      } else {
+        const target = Math.max(...infos.map((b) => b.bbox.bottom));
+        shapes = shapes.map((s) => { const b = infos.find((i) => i.id === s.id); return b ? { ...s, cy: b.cy + (target - b.bbox.bottom) } as Shape : s; });
+      }
+      return { ...state, shapes, history: [...state.history, state.shapes], validated: false };
+    }
 
     case 'SET_TARGET':
       return { ...state, target: { ...state.target, ...action.updates }, validated: false };
@@ -145,7 +193,7 @@ function reducer(state: CreatorState, action: CreatorAction): CreatorState {
       if (state.history.length === 0) return state;
       const history = [...state.history];
       const shapes = history.pop() ?? [];
-      return { ...state, shapes, history, selectedId: null, validated: false };
+      return { ...state, shapes, history, selectedIds: [], validated: false };
     }
 
     case 'TOGGLE_WALL': {
@@ -175,7 +223,7 @@ function reducer(state: CreatorState, action: CreatorAction): CreatorState {
       return {
         ...state,
         shapes: newShapes,
-        selectedId: pasted.id,
+        selectedIds: [pasted.id],
         history: [...state.history, state.shapes],
         validated: false,
       };
@@ -219,7 +267,7 @@ export function useCreatorState(initialPayload?: Payload | null): CreatorStateAp
   });
 
   // S — Single Responsibility: keyboard handling delegated to dedicated hook
-  useCreatorKeyboard(dispatch, state.selectedId);
+  useCreatorKeyboard(dispatch, state.selectedIds);
 
   const getPayload = useCallback(
     (): Payload => ({

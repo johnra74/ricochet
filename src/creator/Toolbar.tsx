@@ -30,7 +30,7 @@ interface ToolbarProps {
 }
 
 export default function Toolbar({ state, dispatch, onTest }: ToolbarProps) {
-  const { activeTool, board, maxRicochets } = state;
+  const { activeTool, board, maxRicochets, selectedIds } = state;
 
   return (
     <div className="toolbar">
@@ -127,12 +127,25 @@ export default function Toolbar({ state, dispatch, onTest }: ToolbarProps) {
         <div className="wall-hint">Toggle walls players can start from.</div>
       </div>
 
+      {selectedIds.length >= 2 && (
+        <div className="toolbar-section">
+          <div className="toolbar-label">Align</div>
+          <div className="align-buttons">
+            <button className="align-btn" title="Align left edges"   onClick={() => dispatch({ type: 'ALIGN', direction: 'left'   })}>⊢ Left</button>
+            <button className="align-btn" title="Align right edges"  onClick={() => dispatch({ type: 'ALIGN', direction: 'right'  })}>⊣ Right</button>
+            <button className="align-btn" title="Align top edges"    onClick={() => dispatch({ type: 'ALIGN', direction: 'top'    })}>⊤ Top</button>
+            <button className="align-btn" title="Align bottom edges" onClick={() => dispatch({ type: 'ALIGN', direction: 'bottom' })}>⊥ Bottom</button>
+          </div>
+        </div>
+      )}
+
       <div className="toolbar-section toolbar-hint">
         <div className="hint-text">
           <strong>Tips</strong>
           <ul>
             <li>Drag to place shapes</li>
             <li>Click shape to select</li>
+            <li>Shift+click to multi-select</li>
             <li>Drag handles to resize/rotate</li>
             <li>Ctrl+C / Ctrl+V to copy &amp; paste</li>
             <li>Del to remove selected</li>
