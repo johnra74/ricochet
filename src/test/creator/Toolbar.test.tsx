@@ -13,7 +13,7 @@ function makeState(overrides: Partial<CreatorState> = {}): CreatorState {
     maxRicochets: DEFAULT_MAX_RICOCHETS,
     allowedWalls: [...DEFAULT_ALLOWED_WALLS],
     shapes: [],
-    selectedId: null,
+    selectedIds: [],
     activeTool: 'select',
     ghost: null,
     history: [],
@@ -124,5 +124,32 @@ describe('Toolbar', () => {
     render(<Toolbar state={makeState()} dispatch={dispatch} onTest={onTest} />);
     await userEvent.click(screen.getByText(/Validate & Share/i));
     expect(onTest).toHaveBeenCalledOnce();
+  });
+
+  it('does not show Align section when fewer than 2 shapes selected', () => {
+    render(<Toolbar state={makeState({ selectedIds: ['a'] })} dispatch={vi.fn()} onTest={vi.fn()} />);
+    expect(screen.queryByText(/Align/)).toBeNull();
+  });
+
+  it('shows Align section with 4 buttons when 2+ shapes selected', () => {
+    render(<Toolbar state={makeState({ selectedIds: ['a', 'b'] })} dispatch={vi.fn()} onTest={vi.fn()} />);
+    expect(screen.getByTitle('Align left edges')).toBeInTheDocument();
+    expect(screen.getByTitle('Align right edges')).toBeInTheDocument();
+    expect(screen.getByTitle('Align top edges')).toBeInTheDocument();
+    expect(screen.getByTitle('Align bottom edges')).toBeInTheDocument();
+  });
+
+  it('clicking Align left dispatches ALIGN with direction left', async () => {
+    const dispatch = vi.fn() as Dispatch<CreatorAction>;
+    render(<Toolbar state={makeState({ selectedIds: ['a', 'b'] })} dispatch={dispatch} onTest={vi.fn()} />);
+    await userEvent.click(screen.getByTitle('Align left edges'));
+    expect(dispatch).toHaveBeenCalledWith({ type: 'ALIGN', direction: 'left' });
+  });
+
+  it('clicking Align bottom dispatches ALIGN with direction bottom', async () => {
+    const dispatch = vi.fn() as Dispatch<CreatorAction>;
+    render(<Toolbar state={makeState({ selectedIds: ['a', 'b'] })} dispatch={dispatch} onTest={vi.fn()} />);
+    await userEvent.click(screen.getByTitle('Align bottom edges'));
+    expect(dispatch).toHaveBeenCalledWith({ type: 'ALIGN', direction: 'bottom' });
   });
 });

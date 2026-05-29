@@ -17,7 +17,7 @@ interface BoardCanvasProps {
 
 export default function BoardCanvas({ state, dispatch }: BoardCanvasProps) {
   const svgRef = useRef<SVGSVGElement>(null);
-  const { board, target, shapes, selectedId, activeTool, ghost, allowedWalls } = state;
+  const { board, target, shapes, selectedIds, activeTool, ghost, allowedWalls } = state;
 
   const getSvgPt = (e: React.PointerEvent) => clientToSvg(e.clientX, e.clientY, svgRef);
 
@@ -70,9 +70,10 @@ export default function BoardCanvas({ state, dispatch }: BoardCanvasProps) {
       >
         <ShapeOverlay
           shapes={shapes}
-          selectedId={selectedId}
+          selectedIds={selectedIds}
           svgRef={svgRef}
           onSelect={(id) => dispatch({ type: 'SELECT', id })}
+          onToggleSelection={(id) => dispatch({ type: 'TOGGLE_SELECTION', id })}
           onUpdate={(id, updates) => dispatch({ type: 'UPDATE_SHAPE', id, updates })}
         />
         <GhostShape ghost={ghost} />

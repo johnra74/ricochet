@@ -32,7 +32,6 @@ function ResizeHandles({ shape, svgRef, onUpdate }: ResizeHandlesProps) {
       const wy = s.cy + world.y;
 
       const onDrag = (pt: Vec2) => {
-        // Rotate pt back to local space
         const local = rotateVec({ x: pt.x - s.cx, y: pt.y - s.cy }, -rad);
         const newHw = Math.max(10, Math.abs(local.x));
         const newHh = Math.max(10, Math.abs(local.y));
@@ -157,41 +156,60 @@ function RotateHandle({ shape, svgRef, onUpdate }: RotateHandleProps) {
 
 interface MoveStart {
   svgPt: Vec2;
-  cx: number;
-  cy: number;
-  id: string;
+  origins: { id: string; cx: number; cy: number }[];
 }
 
 interface ShapeOverlayProps {
   shapes: Shape[];
-  selectedId: string | null;
+  selectedIds: string[];
   svgRef: RefObject<SVGSVGElement | null>;
   onSelect: (id: string) => void;
+  onToggleSelection: (id: string) => void;
   onUpdate: (id: string, updates: Partial<Shape>) => void;
 }
 
-export default function ShapeOverlay({ shapes, selectedId, svgRef, onSelect, onUpdate }: ShapeOverlayProps) {
+export default function ShapeOverlay({ shapes, selectedIds, svgRef, onSelect, onToggleSelection, onUpdate }: ShapeOverlayProps) {
   const moveStart = useRef<MoveStart | null>(null);
 
   return (
     <>
       {shapes.map((shape) => {
-        const isSelected = shape.id === selectedId;
+        const isSelected = selectedIds.includes(shape.id);
+        const isSoleSelection = isSelected && selectedIds.length === 1;
 
         const handleBodyPointerDown = (e: React.PointerEvent<SVGGElement>) => {
           const tag = (e.target as Element).tagName;
           if (tag !== 'circle' && tag !== 'rect' && tag !== 'polygon') return;
           e.stopPropagation();
-          onSelect(shape.id);
+
+          if (e.shiftKey) {
+            onToggleSelection(shape.id);
+            return;
+          }
+
+          if (!isSelected) {
+            onSelect(shape.id);
+          }
+
+          // Snapshot starting positions for all shapes that will be moved.
+          // If this shape was already in the selection, move the whole selection;
+          // otherwise (just selected it above) move only this shape.
+          const dragIds = isSelected ? selectedIds : [shape.id];
+          const origins = shapes
+            .filter((s) => dragIds.includes(s.id))
+            .map((s) => ({ id: s.id, cx: s.cx, cy: s.cy }));
+
           const svgPt = clientToSvg(e.clientX, e.clientY, svgRef);
-          moveStart.current = { svgPt, cx: shape.cx, cy: shape.cy, id: shape.id };
+          moveStart.current = { svgPt, origins };
 
           const onMoveEvt = (me: PointerEvent) => {
-            if (!moveStart.current || moveStart.current.id !== shape.id) return;
+            if (!moveStart.current) return;
             const cur = clientToSvg(me.clientX, me.clientY, svgRef);
             const dx = cur.x - moveStart.current.svgPt.x;
             const dy = cur.y - moveStart.current.svgPt.y;
-            onUpdate(shape.id, { cx: moveStart.current.cx + dx, cy: moveStart.current.cy + dy });
+            for (const origin of moveStart.current.origins) {
+              onUpdate(origin.id, { cx: origin.cx + dx, cy: origin.cy + dy });
+            }
           };
 
           const onUp = () => {
@@ -207,7 +225,7 @@ export default function ShapeOverlay({ shapes, selectedId, svgRef, onSelect, onU
         return (
           <g key={shape.id} onPointerDown={handleBodyPointerDown}>
             <ShapeRenderer shape={shape} selected={isSelected} />
-            {isSelected && (
+            {isSoleSelection && (
               <>
                 <ResizeHandles
                   shape={shape}
