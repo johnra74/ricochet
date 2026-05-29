@@ -137,6 +137,25 @@ html, body, #root {
   width: 20px;
   text-align: center;
 }
+.align-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+.align-btn {
+  background: var(--surface1);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 5px 4px;
+  text-align: center;
+}
+.align-btn:hover {
+  background: var(--surface2);
+  border-color: var(--accent);
+}
 .tool-label {
   font-size: 12px;
 }

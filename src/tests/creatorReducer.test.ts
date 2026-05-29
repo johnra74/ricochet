@@ -52,23 +52,23 @@ describe('SET_TOOL', () => {
     const { result } = renderHook(() => useCreatorState())
     act(() => result.current.dispatch({ type: 'SET_TOOL', tool: 'rect' }))
     expect(result.current.state.activeTool).toBe('rect')
-    expect(result.current.state.selectedId).toBeNull()
+    expect(result.current.state.selectedIds).toEqual([])
   })
 })
 
 describe('SELECT / DESELECT', () => {
-  it('SELECT sets selectedId and switches tool to select', () => {
+  it('SELECT sets selectedIds to single id and switches tool to select', () => {
     const { result } = renderHook(() => useCreatorState())
     act(() => result.current.dispatch({ type: 'SELECT', id: 'some-id' }))
-    expect(result.current.state.selectedId).toBe('some-id')
+    expect(result.current.state.selectedIds).toEqual(['some-id'])
     expect(result.current.state.activeTool).toBe('select')
   })
 
-  it('DESELECT clears selectedId', () => {
+  it('DESELECT clears selectedIds', () => {
     const { result } = renderHook(() => useCreatorState())
     act(() => result.current.dispatch({ type: 'SELECT', id: 'x' }))
     act(() => result.current.dispatch({ type: 'DESELECT' }))
-    expect(result.current.state.selectedId).toBeNull()
+    expect(result.current.state.selectedIds).toEqual([])
   })
 })
 
@@ -173,7 +173,7 @@ describe('DELETE_SHAPE', () => {
     expect(result.current.state.shapes).toHaveLength(0)
   })
 
-  it('clears selectedId if deleted shape was selected', () => {
+  it('removes id from selectedIds when deleted shape was selected', () => {
     const { result } = renderHook(() => useCreatorState())
     act(() => result.current.dispatch({ type: 'GHOST_START', shapeType: 'rect', pt: { x: 0, y: 0 } }))
     act(() => result.current.dispatch({ type: 'GHOST_MOVE', pt: { x: 100, y: 100 } }))
@@ -181,7 +181,7 @@ describe('DELETE_SHAPE', () => {
     const id = result.current.state.shapes[0].id
     act(() => result.current.dispatch({ type: 'SELECT', id }))
     act(() => result.current.dispatch({ type: 'DELETE_SHAPE', id }))
-    expect(result.current.state.selectedId).toBeNull()
+    expect(result.current.state.selectedIds).toEqual([])
   })
 })
 
@@ -326,7 +326,7 @@ describe('COPY_SHAPE / PASTE_SHAPE', () => {
     act(() => result.current.dispatch({ type: 'COPY_SHAPE', id: original.id }))
     act(() => result.current.dispatch({ type: 'PASTE_SHAPE' }))
     const pasted = result.current.state.shapes[1]
-    expect(result.current.state.selectedId).toBe(pasted.id)
+    expect(result.current.state.selectedIds).toEqual([pasted.id])
   })
 
   it('PASTE_SHAPE with no clipboard is a no-op', () => {

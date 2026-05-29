@@ -2,20 +2,19 @@ import { useEffect } from 'react'
 import type { Dispatch } from 'react'
 import type { CreatorAction } from './useCreatorState.js'
 
-// S — Single Responsibility: keyboard shortcut handling extracted from useCreatorState
-export function useCreatorKeyboard(dispatch: Dispatch<CreatorAction>, selectedId: string | null): void {
+export function useCreatorKeyboard(dispatch: Dispatch<CreatorAction>, selectedIds: string[]): void {
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if ((e.target as HTMLElement).tagName === 'INPUT') return;
-      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedId) {
-        dispatch({ type: 'DELETE_SHAPE', id: selectedId });
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedIds.length > 0) {
+        dispatch({ type: 'DELETE_SELECTED' });
       }
       if ((e.key === 'z' || e.key === 'Z') && (e.ctrlKey || e.metaKey)) {
         dispatch({ type: 'UNDO' });
       }
-      if ((e.key === 'c' || e.key === 'C') && (e.ctrlKey || e.metaKey) && selectedId) {
+      if ((e.key === 'c' || e.key === 'C') && (e.ctrlKey || e.metaKey) && selectedIds.length === 1) {
         e.preventDefault();
-        dispatch({ type: 'COPY_SHAPE', id: selectedId });
+        dispatch({ type: 'COPY_SHAPE', id: selectedIds[0] });
       }
       if ((e.key === 'v' || e.key === 'V') && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
@@ -28,5 +27,5 @@ export function useCreatorKeyboard(dispatch: Dispatch<CreatorAction>, selectedId
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [dispatch, selectedId]);
+  }, [dispatch, selectedIds]);
 }

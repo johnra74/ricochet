@@ -27,7 +27,7 @@ describe('useCreatorState', () => {
 
   it('initial state has no selected shape', () => {
     const { result } = renderHook(() => useCreatorState());
-    expect(result.current.state.selectedId).toBeNull();
+    expect(result.current.state.selectedIds).toEqual([]);
   });
 
   it('initial state has select as the active tool', () => {
@@ -111,11 +111,11 @@ describe('useCreatorState', () => {
       result.current.dispatch({ type: 'GHOST_COMMIT' });
     });
     const newId = result.current.state.shapes[0].id;
-    expect(result.current.state.selectedId).toBe(newId);
+    expect(result.current.state.selectedIds).toEqual([newId]);
     expect(result.current.state.activeTool).toBe('select');
   });
 
-  it('SELECT updates selectedId', () => {
+  it('SELECT updates selectedIds', () => {
     const { result } = renderHook(() => useCreatorState());
     act(() => {
       result.current.dispatch({ type: 'GHOST_START', shapeType: 'circle', pt: { x: 100, y: 100 } });
@@ -126,14 +126,14 @@ describe('useCreatorState', () => {
     act(() => {
       result.current.dispatch({ type: 'DESELECT' });
     });
-    expect(result.current.state.selectedId).toBeNull();
+    expect(result.current.state.selectedIds).toEqual([]);
     act(() => {
       result.current.dispatch({ type: 'SELECT', id });
     });
-    expect(result.current.state.selectedId).toBe(id);
+    expect(result.current.state.selectedIds).toEqual([id]);
   });
 
-  it('DESELECT clears selectedId', () => {
+  it('DESELECT clears selectedIds', () => {
     const { result } = renderHook(() => useCreatorState());
     act(() => {
       result.current.dispatch({ type: 'GHOST_START', shapeType: 'circle', pt: { x: 100, y: 100 } });
@@ -143,7 +143,7 @@ describe('useCreatorState', () => {
     act(() => {
       result.current.dispatch({ type: 'DESELECT' });
     });
-    expect(result.current.state.selectedId).toBeNull();
+    expect(result.current.state.selectedIds).toEqual([]);
   });
 
   it('UPDATE_SHAPE modifies an existing shape property', () => {
@@ -189,7 +189,7 @@ describe('useCreatorState', () => {
     expect(result.current.state.shapes).toHaveLength(0);
   });
 
-  it('DELETE_SHAPE clears selectedId when the deleted shape was selected', () => {
+  it('DELETE_SHAPE removes id from selectedIds when the deleted shape was selected', () => {
     const { result } = renderHook(() => useCreatorState());
     act(() => {
       result.current.dispatch({ type: 'GHOST_START', shapeType: 'rect', pt: { x: 50, y: 50 } });
@@ -197,11 +197,11 @@ describe('useCreatorState', () => {
       result.current.dispatch({ type: 'GHOST_COMMIT' });
     });
     const id = result.current.state.shapes[0].id;
-    expect(result.current.state.selectedId).toBe(id);
+    expect(result.current.state.selectedIds).toEqual([id]);
     act(() => {
       result.current.dispatch({ type: 'DELETE_SHAPE', id });
     });
-    expect(result.current.state.selectedId).toBeNull();
+    expect(result.current.state.selectedIds).toEqual([]);
   });
 
   it('SET_BOARD updates board dimensions and sets validated to false', () => {
@@ -309,7 +309,7 @@ describe('useCreatorState', () => {
       result.current.dispatch({ type: 'SET_TOOL', tool: 'rect' });
     });
     expect(result.current.state.activeTool).toBe('rect');
-    expect(result.current.state.selectedId).toBeNull();
+    expect(result.current.state.selectedIds).toEqual([]);
     expect(result.current.state.ghost).toBeNull();
   });
 });

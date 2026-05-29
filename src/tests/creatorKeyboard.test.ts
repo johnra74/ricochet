@@ -8,80 +8,87 @@ function fireKey(key: string, extra: Partial<KeyboardEventInit> = {}) {
 }
 
 describe('useCreatorKeyboard', () => {
-  it('Delete dispatches DELETE_SHAPE when a shape is selected', () => {
+  it('Delete dispatches DELETE_SELECTED when shapes are selected', () => {
     const dispatch = vi.fn()
-    renderHook(() => useCreatorKeyboard(dispatch as React.Dispatch<CreatorAction>, 'shape-1'))
+    renderHook(() => useCreatorKeyboard(dispatch as React.Dispatch<CreatorAction>, ['shape-1']))
     fireKey('Delete')
-    expect(dispatch).toHaveBeenCalledWith({ type: 'DELETE_SHAPE', id: 'shape-1' })
+    expect(dispatch).toHaveBeenCalledWith({ type: 'DELETE_SELECTED' })
   })
 
-  it('Backspace dispatches DELETE_SHAPE when a shape is selected', () => {
+  it('Backspace dispatches DELETE_SELECTED when shapes are selected', () => {
     const dispatch = vi.fn()
-    renderHook(() => useCreatorKeyboard(dispatch as React.Dispatch<CreatorAction>, 'shape-2'))
+    renderHook(() => useCreatorKeyboard(dispatch as React.Dispatch<CreatorAction>, ['shape-2']))
     fireKey('Backspace')
-    expect(dispatch).toHaveBeenCalledWith({ type: 'DELETE_SHAPE', id: 'shape-2' })
+    expect(dispatch).toHaveBeenCalledWith({ type: 'DELETE_SELECTED' })
   })
 
   it('Delete does NOT dispatch when no shape is selected', () => {
     const dispatch = vi.fn()
-    renderHook(() => useCreatorKeyboard(dispatch as React.Dispatch<CreatorAction>, null))
+    renderHook(() => useCreatorKeyboard(dispatch as React.Dispatch<CreatorAction>, []))
     fireKey('Delete')
     expect(dispatch).not.toHaveBeenCalled()
   })
 
   it('Ctrl+Z dispatches UNDO', () => {
     const dispatch = vi.fn()
-    renderHook(() => useCreatorKeyboard(dispatch as React.Dispatch<CreatorAction>, null))
+    renderHook(() => useCreatorKeyboard(dispatch as React.Dispatch<CreatorAction>, []))
     fireKey('z', { ctrlKey: true })
     expect(dispatch).toHaveBeenCalledWith({ type: 'UNDO' })
   })
 
   it('Meta+Z dispatches UNDO (macOS)', () => {
     const dispatch = vi.fn()
-    renderHook(() => useCreatorKeyboard(dispatch as React.Dispatch<CreatorAction>, null))
+    renderHook(() => useCreatorKeyboard(dispatch as React.Dispatch<CreatorAction>, []))
     fireKey('Z', { metaKey: true })
     expect(dispatch).toHaveBeenCalledWith({ type: 'UNDO' })
   })
 
   it('Escape dispatches GHOST_CANCEL and DESELECT', () => {
     const dispatch = vi.fn()
-    renderHook(() => useCreatorKeyboard(dispatch as React.Dispatch<CreatorAction>, 'some-id'))
+    renderHook(() => useCreatorKeyboard(dispatch as React.Dispatch<CreatorAction>, ['some-id']))
     fireKey('Escape')
     expect(dispatch).toHaveBeenCalledWith({ type: 'GHOST_CANCEL' })
     expect(dispatch).toHaveBeenCalledWith({ type: 'DESELECT' })
   })
 
-  it('Ctrl+C dispatches COPY_SHAPE when a shape is selected', () => {
+  it('Ctrl+C dispatches COPY_SHAPE when exactly one shape is selected', () => {
     const dispatch = vi.fn()
-    renderHook(() => useCreatorKeyboard(dispatch as React.Dispatch<CreatorAction>, 'shape-3'))
+    renderHook(() => useCreatorKeyboard(dispatch as React.Dispatch<CreatorAction>, ['shape-3']))
     fireKey('c', { ctrlKey: true })
     expect(dispatch).toHaveBeenCalledWith({ type: 'COPY_SHAPE', id: 'shape-3' })
   })
 
   it('Ctrl+C does NOT dispatch when no shape is selected', () => {
     const dispatch = vi.fn()
-    renderHook(() => useCreatorKeyboard(dispatch as React.Dispatch<CreatorAction>, null))
+    renderHook(() => useCreatorKeyboard(dispatch as React.Dispatch<CreatorAction>, []))
     fireKey('c', { ctrlKey: true })
     expect(dispatch).not.toHaveBeenCalled()
   })
 
+  it('Ctrl+C does NOT dispatch COPY_SHAPE when multiple shapes are selected', () => {
+    const dispatch = vi.fn()
+    renderHook(() => useCreatorKeyboard(dispatch as React.Dispatch<CreatorAction>, ['a', 'b']))
+    fireKey('c', { ctrlKey: true })
+    expect(dispatch).not.toHaveBeenCalledWith(expect.objectContaining({ type: 'COPY_SHAPE' }))
+  })
+
   it('Ctrl+V dispatches PASTE_SHAPE', () => {
     const dispatch = vi.fn()
-    renderHook(() => useCreatorKeyboard(dispatch as React.Dispatch<CreatorAction>, null))
+    renderHook(() => useCreatorKeyboard(dispatch as React.Dispatch<CreatorAction>, []))
     fireKey('v', { ctrlKey: true })
     expect(dispatch).toHaveBeenCalledWith({ type: 'PASTE_SHAPE' })
   })
 
   it('Meta+C dispatches COPY_SHAPE (macOS)', () => {
     const dispatch = vi.fn()
-    renderHook(() => useCreatorKeyboard(dispatch as React.Dispatch<CreatorAction>, 'shape-4'))
+    renderHook(() => useCreatorKeyboard(dispatch as React.Dispatch<CreatorAction>, ['shape-4']))
     fireKey('c', { metaKey: true })
     expect(dispatch).toHaveBeenCalledWith({ type: 'COPY_SHAPE', id: 'shape-4' })
   })
 
   it('ignores Delete when focus is on an INPUT element', () => {
     const dispatch = vi.fn()
-    renderHook(() => useCreatorKeyboard(dispatch as React.Dispatch<CreatorAction>, 'shape-1'))
+    renderHook(() => useCreatorKeyboard(dispatch as React.Dispatch<CreatorAction>, ['shape-1']))
     const input = document.createElement('input')
     document.body.appendChild(input)
     input.focus()
@@ -95,7 +102,7 @@ describe('useCreatorKeyboard', () => {
   it('removes event listener on unmount', () => {
     const dispatch = vi.fn()
     const { unmount } = renderHook(() =>
-      useCreatorKeyboard(dispatch as React.Dispatch<CreatorAction>, 'shape-1')
+      useCreatorKeyboard(dispatch as React.Dispatch<CreatorAction>, ['shape-1'])
     )
     unmount()
     fireKey('Delete')
